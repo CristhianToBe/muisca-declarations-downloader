@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+
+# VSCode
+.vscode/
+
+# Test
+descargas/
+cookies.pkl
+chromedriver.exe
