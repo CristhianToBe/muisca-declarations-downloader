@@ -11,3 +11,4 @@ venv/
 descargas/
 cookies.pkl
 chromedriver.exe
+var.json
