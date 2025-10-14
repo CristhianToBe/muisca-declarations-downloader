@@ -1,5 +1,5 @@
 @echo off
-setlocal
+cd /d "D:\Code\Declaraciones"
 
 REM ==========================
 REM CONFIGURACIÓN
