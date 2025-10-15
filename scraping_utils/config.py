@@ -1,0 +1,18 @@
+import json
+
+def load_config(path="var.json"):
+    with open(path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    tipos = config["TIPO_OBLIGACION"]
+    if isinstance(tipos, str):
+        tipos = [tipos]
+
+    return {
+        "CHROMEDRIVER_PATH": config["CHROMEDRIVER_PATH"],
+        "BASE_DOWNLOAD_DIR": config["BASE_DOWNLOAD_DIR"],
+        "NIT": config["NIT"],
+        "TIPOS_OBLIGACION": tipos,
+        "ANIO_INICIO": int(config["ANIO_INICIO"]),
+        "ANIO_FIN": int(config["ANIO_FIN"]),
+    }

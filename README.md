@@ -1,124 +1,97 @@
-# Declarations Downloader
+# Declaraciones - Scraper DIAN
 
-Script en **Python + Selenium** para automatizar la descarga de declaraciones desde un portal web oficial.
-Soporta múltiples **años** y múltiples **tipos de obligación**, definidos en un archivo de configuración local (`var.json`, **no se sube al repositorio**).
-
-Incluye un **anti-idle** que simula la tecla `Ctrl` cada minuto para evitar que el PC se bloquee durante la ejecución.
+Este proyecto automatiza la descarga de obligaciones financieras desde el portal **MUISCA de la DIAN**.  
+El flujo combina **Selenium** (para login manual y captura de cookies) con **Requests + BeautifulSoup** (para navegar formularios y descargar PDFs).
 
 ---
 
 ## 🚀 Requisitos
 
-1. **Python 3.10+** instalado.
-2. Clonar este repositorio y crear entorno virtual:
+- **Python 3.10+**
+- Google Chrome instalado
+- `chromedriver.exe` correspondiente a tu versión de Chrome
+- Archivo de configuración `var.json` en el raíz con esta estructura:
 
-   ```bash
-   python -m venv venv
-   ```
-3. Activar el entorno virtual:
+```json
+{
+    "CHROMEDRIVER_PATH": "chromedriver.exe",
+    "BASE_DOWNLOAD_DIR": "descargas",
+    "NIT": "123456789",
+    "TIPO_OBLIGACION": ["01", "21"],
+    "ANIO_INICIO": 2020,
+    "ANIO_FIN": 2024
+}
 
-   * Windows:
+▶️ Uso rápido en Windows
 
-     ```bash
-     venv\Scripts\activate
-     ```
-   * Linux / Mac:
+Ejecuta el archivo `run.bat`:
+```bash
+run.bat
 
-     ```bash
-     source venv/bin/activate
-     ```
-4. Instalar dependencias:
+La primera vez, abre Chrome y haz login manualmente hasta la pestaña Obligación Financiera.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+El sistema guardará las cookies automáticamente.
 
----
+En ejecuciones posteriores, las cookies se reutilizan y el flujo continúa sin login.
 
-## ⚙️ Configuración
+Los PDFs descargados se guardan en la carpeta indicada en var.json (por defecto descargas/).
 
-Debes crear un archivo **`var.json`** en la raíz del proyecto (no está en Git, lo manejas localmente).
+📂 Estructura del proyecto
 
-El contenido define:
+php
+Copiar código
+Declaraciones/
+├── descargas/            # PDFs descargados
+├── scraping_utils/       # Módulos reutilizables
+│   ├── anti_idle.py      # Previene que la sesión se cierre
+│   ├── config.py         # Carga y normaliza la configuración desde var.json
+│   ├── cookies.py        # Maneja carga/guardado de cookies
+│   ├── navegador.py      # Selenium: abre Chrome, inyecta cookies y captura HTML
+│   ├── scraper.py        # Lógica de requests + BeautifulSoup (payloads, parsing)
+│   └── downloader.py     # Guarda PDFs en disco
+├── script.py             # Orquestador principal del flujo
+├── run.bat               # Ejecución rápida en Windows
+├── requirements.txt      # Dependencias
+├── var.json              # Configuración
+└── README.md
 
-* Ruta al ejecutable del driver del navegador.
-* Carpeta base donde se guardarán los PDFs.
-* Identificación de la entidad a consultar.
-* Lista de obligaciones a descargar.
-* Rango de años a procesar.
+📘 Descripción de cada módulo
 
-**Importante:** `var.json` contiene información sensible y no debe compartirse.
+script.py → el orquestador. Ejecuta todo el proceso de forma secuencial.
 
----
+anti_idle.py → lanza un hilo que presiona Ctrl cada minuto para evitar que la sesión expire por inactividad.
 
-## ▶️ Ejecución
+config.py → carga var.json y devuelve la configuración normalizada (rutas, años, tipos de obligación, NIT).
 
-1. Ejecuta el script con:
+cookies.py → abstrae el manejo de cookies.pkl (guardar y cargar cookies de sesión).
 
-   ```bash
-   venv\Scripts\python.exe script.py
-   ```
+navegador.py → controla Selenium:
 
-   o con doble clic en `run.bat`.
+Abre Chrome.
 
-2. Si es la **primera vez**:
+Inyecta cookies si existen.
 
-   * Se abrirá el navegador.
-   * Inicia sesión en el portal.
-   * Navega hasta la sección de **Obligación Financiera**.
-   * Presiona ENTER en consola para continuar.
-   * Se guardarán cookies para próximas ejecuciones (**excluidas de Git**).
+Pide login manual si no hay cookies válidas.
 
-3. En ejecuciones siguientes:
+Captura HTML y cookies actualizadas.
 
-   * El script intentará reutilizar cookies para saltar el login.
-   * Si expiran → deberás iniciar sesión manualmente otra vez.
+scraper.py → funciones para scraping con requests:
 
----
+Construye la sesión con cookies y headers.
 
-## 📂 Descargas
+Extrae formularios y payloads.
 
-Los PDFs se guardan en la carpeta configurada en `var.json` (excluida de Git).
-La estructura sigue el patrón:
+Ejecuta consultas de obligaciones.
 
-```
-descargas/
-├── [año]/
-│   ├── [tipo_obligacion]/
-│   │   ├── documento1.pdf
-│   │   └── documento2.pdf
-```
+Itera y obtiene enlaces a PDFs.
 
----
+downloader.py → recibe el contenido de los PDFs y los guarda en el directorio correspondiente, con nombres organizados por año y tipo de obligación.
 
-## 🖥️ Ejemplo de `run.bat`
+📝 Notas
 
-Crea un archivo `run.bat` en la raíz del proyecto:
+El login es manual: no se automatiza usuario/contraseña.
 
-```bat
-@echo off
-setlocal
+Si cambia la versión de Chrome, actualiza chromedriver.exe.
 
-REM Ir a la carpeta del proyecto
-cd /d "%~dp0"
+Si quieres reiniciar sesión, borra el archivo cookies.pkl.
 
-REM Configuración
-set VENV_DIR=venv
-set PYTHON_EXE=%VENV_DIR%\Scripts\python.exe
-set SCRIPT=script.py
-
-REM Ejecutar script
-%PYTHON_EXE% %SCRIPT%
-
-pause
-```
-
-Con doble clic en `run.bat` se abrirá la consola, ejecutará el script dentro del entorno virtual y al final se quedará en pausa para mostrar los mensajes.
-
----
-
-## 🛠 Notas técnicas
-
-* El script incluye un **anti-idle** que simula la tecla `Ctrl` cada minuto para que el PC no se bloquee.
-* **No subas** información sensible (`var.json`, cookies, PDFs). Esto ya está protegido en el `.gitignore`.
-* El driver del navegador debe estar alineado con la versión instalada de dicho navegador.
