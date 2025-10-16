@@ -21,6 +21,16 @@ def load_config(path="var.json"):
     else:
         periodos = [1]
 
+    # Normalizar formatos de firmas
+    formatos = config.get("FIRMAS_FORMATOS", [])
+    if isinstance(formatos, int):
+        formatos = [formatos]
+
+    # Normalizar documentos de firmas
+    documentos = config.get("FIRMAS_DOCUMENTOS", [])
+    if isinstance(documentos, int) or isinstance(documentos, str):
+        documentos = [documentos]
+
     return {
         "CHROMEDRIVER_PATH": config["CHROMEDRIVER_PATH"],
         "BASE_DOWNLOAD_DIR": config["BASE_DOWNLOAD_DIR"],
@@ -29,4 +39,7 @@ def load_config(path="var.json"):
         "ANIO_INICIO": int(config["ANIO_INICIO"]),
         "ANIO_FIN": int(config["ANIO_FIN"]),
         "PERIODOS": periodos,
+        "FIRMAS_FORMATOS": formatos,
+        "FIRMAS_DOCUMENTOS": documentos,
     }
+
