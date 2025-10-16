@@ -1,6 +1,6 @@
 # script_firmas.py
 from scraping_utils import config, cookies, navegador
-from scraping_utils import scraper_firmas
+from scraping_utils import scraper_firmas, discover_firmas
 from bs4 import BeautifulSoup
 import os
 from requests.compat import urljoin
@@ -10,6 +10,12 @@ def main():
     cfg = config.load_config()
     base_dir = os.path.join(cfg["BASE_DOWNLOAD_DIR"], "firmas")
     os.makedirs(base_dir, exist_ok=True)
+
+    formatos, documentos = discover_firmas.discover_from_pdfs(cfg["BASE_DOWNLOAD_DIR"], cfg["FIRMAS_PREFIJO"])
+    cfg["FIRMAS_FORMATOS"] = formatos
+    cfg["FIRMAS_DOCUMENTOS"] = documentos
+
+    print(f"📂 Descubiertos {len(documentos)} documentos con prefijo {cfg['FIRMAS_PREFIJO']}")
 
     # 2) Cargar cookies previas si existen
     cks = cookies.load()
