@@ -6,7 +6,7 @@ REM CONFIGURACIÓN
 REM ==========================
 set VENV_DIR=venv
 set PYTHON_EXE=%VENV_DIR%\Scripts\python.exe
-set SCRIPT=script_firmas.py
+set SCRIPT=ui_launcher.py
 
 REM ==========================
 REM CREAR VENV SI NO EXISTE
