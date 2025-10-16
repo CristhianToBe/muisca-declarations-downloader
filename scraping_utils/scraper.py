@@ -30,12 +30,13 @@ def extract_payload(search_html, search_url):
     search_action = requests.compat.urljoin(search_url, form["action"])
     return payload_base, search_action
 
-def build_payload(payload_base, nit, tipo, anio):
+def build_payload(payload_base, nit, tipo, anio, periodo):
     payload = payload_base.copy()
     payload.update({
         "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:txtNit": nit,
         "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:tipOblig": tipo,
         "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:annoSeleccionado": str(anio),
+        "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:periodoSel": str(periodo),
         "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:_idcl":
             "vistaObligacionesPorDocumento:frmObligacionesPorDocumento:lnkBuscarObligaciones"
     })

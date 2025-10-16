@@ -1,97 +1,63 @@
-# Declaraciones - Scraper DIAN
+# Scraper MUISCA DIAN
 
-Este proyecto automatiza la descarga de obligaciones financieras desde el portal **MUISCA de la DIAN**.  
-El flujo combina **Selenium** (para login manual y captura de cookies) con **Requests + BeautifulSoup** (para navegar formularios y descargar PDFs).
+Este proyecto automatiza la descarga de PDFs de obligaciones financieras desde el portal MUISCA de la DIAN usando Selenium y Requests.
 
 ---
 
-## 🚀 Requisitos
+## 🚀 Estructura
 
-- **Python 3.10+**
-- Google Chrome instalado
-- `chromedriver.exe` correspondiente a tu versión de Chrome
-- Archivo de configuración `var.json` en el raíz con esta estructura:
+- `script.py` → flujo principal de ejecución.
+- `scraping_utils/`
+  - `config.py` → carga variables desde `var.json`.
+  - `anti_idle.py` → mantiene el PC activo.
+  - `cookies.py` → maneja cookies de sesión.
+  - `navegador.py` → abre Selenium y gestiona login manual.
+  - `scraper.py` → funciones para armar payloads, buscar obligaciones y descargar PDFs.
+  - `downloader.py` → guarda PDFs en carpetas organizadas.
+
+---
+
+## ⚙️ Configuración
+
+En `var.json` defines:
 
 ```json
 {
-    "CHROMEDRIVER_PATH": "chromedriver.exe",
-    "BASE_DOWNLOAD_DIR": "descargas",
-    "NIT": "123456789",
-    "TIPO_OBLIGACION": ["01", "21"],
-    "ANIO_INICIO": 2020,
-    "ANIO_FIN": 2024
+  "CHROMEDRIVER_PATH": "ruta/a/chromedriver.exe",
+  "BASE_DOWNLOAD_DIR": "descargas",
+  "NIT": "123456789",
+  "TIPO_OBLIGACION": ["1007", "1001"],
+  "ANIO_INICIO": 2023,
+  "ANIO_FIN": 2024,
+  "PERIODO": [1, 12]
 }
+```
 
-▶️ Uso rápido en Windows
+### Notas sobre `PERIODO`:
+- Un número → solo ese periodo (`"PERIODO": 5`).
+- Una lista con dos números → rango inclusivo (`"PERIODO": [1, 12]`).
+- Una lista con varios → periodos específicos (`"PERIODO": [1, 3, 5]`).
 
-Ejecuta el archivo `run.bat`:
-```bash
-run.bat
+---
 
-La primera vez, abre Chrome y haz login manualmente hasta la pestaña Obligación Financiera.
+## 🔑 Uso
 
-El sistema guardará las cookies automáticamente.
+1. Ejecuta el script con el `.bat` (o directamente con `python script.py`).
+2. Se abrirá Chrome con Selenium y deberás **iniciar sesión manualmente en MUISCA**.
+3. **Muy importante:** cuando llegues a la pestaña **Obligación Financiera**, **selecciona el impuesto en el menú desplegable** antes de presionar ENTER en la consola.
+4. El script tomará la página actual como base y empezará a recorrer años, tipos y periodos, descargando los PDFs.
+5. Los archivos quedarán organizados en:  
+   ```
+   descargas/
+     └── 2024/
+         └── 1007/
+             └── periodo_1/
+                 └── xxxx.pdf
+   ```
 
-En ejecuciones posteriores, las cookies se reutilizan y el flujo continúa sin login.
+---
 
-Los PDFs descargados se guardan en la carpeta indicada en var.json (por defecto descargas/).
-
-📂 Estructura del proyecto
-
-php
-Copiar código
-Declaraciones/
-├── descargas/            # PDFs descargados
-├── scraping_utils/       # Módulos reutilizables
-│   ├── anti_idle.py      # Previene que la sesión se cierre
-│   ├── config.py         # Carga y normaliza la configuración desde var.json
-│   ├── cookies.py        # Maneja carga/guardado de cookies
-│   ├── navegador.py      # Selenium: abre Chrome, inyecta cookies y captura HTML
-│   ├── scraper.py        # Lógica de requests + BeautifulSoup (payloads, parsing)
-│   └── downloader.py     # Guarda PDFs en disco
-├── script.py             # Orquestador principal del flujo
-├── run.bat               # Ejecución rápida en Windows
-├── requirements.txt      # Dependencias
-├── var.json              # Configuración
-└── README.md
-
-📘 Descripción de cada módulo
-
-script.py → el orquestador. Ejecuta todo el proceso de forma secuencial.
-
-anti_idle.py → lanza un hilo que presiona Ctrl cada minuto para evitar que la sesión expire por inactividad.
-
-config.py → carga var.json y devuelve la configuración normalizada (rutas, años, tipos de obligación, NIT).
-
-cookies.py → abstrae el manejo de cookies.pkl (guardar y cargar cookies de sesión).
-
-navegador.py → controla Selenium:
-
-Abre Chrome.
-
-Inyecta cookies si existen.
-
-Pide login manual si no hay cookies válidas.
-
-Captura HTML y cookies actualizadas.
-
-scraper.py → funciones para scraping con requests:
-
-Construye la sesión con cookies y headers.
-
-Extrae formularios y payloads.
-
-Ejecuta consultas de obligaciones.
-
-Itera y obtiene enlaces a PDFs.
-
-downloader.py → recibe el contenido de los PDFs y los guarda en el directorio correspondiente, con nombres organizados por año y tipo de obligación.
-
-📝 Notas
-
-El login es manual: no se automatiza usuario/contraseña.
-
-Si cambia la versión de Chrome, actualiza chromedriver.exe.
-
-Si quieres reiniciar sesión, borra el archivo cookies.pkl.
-
+## 📝 Notas
+- Si ya tienes cookies guardadas (`cookies.pkl`), se intentarán reutilizar.
+- Si cambias de navegador o vencen las cookies, deberás iniciar sesión de nuevo.
+- El script usa `anti_idle.py` para evitar que el equipo se bloquee durante la ejecución.

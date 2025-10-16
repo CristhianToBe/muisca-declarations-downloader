@@ -22,35 +22,37 @@ def main():
     # 5) Montar sesión requests con cookies
     session, headers = scraper.make_session(cks, search_url)
 
-    # 6) Extraer payload base del formulario
-    payload_base, search_action = scraper.extract_payload(search_html, search_url)
-
-    # 7) Bucle Años × Tipos de obligación
+    # 6) Bucle Años × Tipos de obligación × Periodos
     for anio in range(cfg["ANIO_INICIO"], cfg["ANIO_FIN"] + 1):
         print(f"\n📅 Procesando año {anio}...")
 
         for tipo in cfg["TIPOS_OBLIGACION"]:
-            print(f"   ➡️ Procesando tipo obligación {tipo}...")
+            for periodo in cfg["PERIODOS"]:
+                print(f"   ➡️ Procesando tipo {tipo}, periodo {periodo}...")
 
-            download_dir = os.path.join(base_dir, str(anio), tipo)
-            os.makedirs(download_dir, exist_ok=True)
+                download_dir = os.path.join(base_dir, str(anio), tipo, f"periodo_{periodo}")
+                os.makedirs(download_dir, exist_ok=True)
 
-            # Preparar payload
-            payload = scraper.build_payload(payload_base, cfg["NIT"], tipo, anio)
+                # ⚠️ Refrescar payload_base en cada periodo para traer ViewState fresco
+                payload_base, search_action = scraper.extract_payload(search_html, search_url)
 
-            # Consultar obligaciones
-            soup2, hidden2, action2 = scraper.buscar_obligaciones(session, search_action, payload, headers)
-            if not soup2:
-                continue
+                # Preparar payload con periodo
+                payload = scraper.build_payload(payload_base, cfg["NIT"], tipo, anio, periodo)
 
-            # Iterar obligaciones y descargar PDFs
-            obligaciones = scraper.get_obligaciones(soup2)
-            print(f"🔁 Año {anio} Tipo {tipo}: encontradas {len(obligaciones)} obligaciones.")
+                # Consultar obligaciones
+                soup2, hidden2, action2 = scraper.buscar_obligaciones(session, search_action, payload, headers)
+                if not soup2:
+                    print(f"⚠️ Año {anio}, tipo {tipo}, periodo {periodo}: sin resultados.")
+                    continue
 
-            for idx, ob in enumerate(obligaciones):
-                pdfs = scraper.get_pdfs(session, action2, hidden2, ob, headers)
-                for num_doc, content in pdfs:
-                    downloader.save_pdf(download_dir, num_doc, content, anio, tipo)
+                # Iterar obligaciones y descargar PDFs
+                obligaciones = scraper.get_obligaciones(soup2)
+                print(f"🔁 Año {anio}, tipo {tipo}, periodo {periodo}: {len(obligaciones)} obligaciones encontradas.")
+
+                for idx, ob in enumerate(obligaciones):
+                    pdfs = scraper.get_pdfs(session, action2, hidden2, ob, headers)
+                    for num_doc, content in pdfs:
+                        downloader.save_pdf(download_dir, num_doc, content, anio, tipo)
 
     print(f"\n🎉 Proceso terminado. Revisa los PDFs en `{os.path.abspath(base_dir)}`.")
 
