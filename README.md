@@ -7,6 +7,8 @@ Este proyecto automatiza la descarga de PDFs de obligaciones financieras desde e
 ## 🚀 Estructura
 
 - `script.py` → flujo principal de ejecución.
+- `script_documentos.py` → extrae solo números de documento (sin descargar PDFs).
+- `script_firmas_index.py` → descarga XML de firmas usando `documentos_encontrados.json`.
 - `scraping_utils/`
   - `config.py` → carga variables desde `var.json`.
   - `anti_idle.py` → mantiene el PC activo.
@@ -54,6 +56,13 @@ En `var.json` defines:
              └── periodo_1/
                  └── xxxx.pdf
    ```
+
+### Flujo alterno solicitado (sin PDFs)
+
+1. Ejecuta `python script_documentos.py` para generar:
+   - `BASE_DOWNLOAD_DIR/documentos_encontrados.json`
+2. Ejecuta `python script_firmas_index.py` para descargar solo XML de firmas
+   usando ese índice de documentos.
 
 ---
 
